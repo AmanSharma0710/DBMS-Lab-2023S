@@ -1,0 +1,63 @@
+-- Queries start here
+
+-- 1
+SELECT DISTINCT Physician.Name AS "Physician Name"
+FROM Physician, Trained_In, Procedure
+WHERE Procedure.Name = 'bypass surgery' AND Procedure.Code = Trained_In.Treatment AND Physician.EmployeeID = Trained_In.Physician;
+
+-- 2
+SELECT DISTINCT Physician.Name AS "Physician Name"
+FROM Physician, Trained_In, Procedure, Affiliated_With, Department
+WHERE Procedure.Name = 'bypass surgery' AND Procedure.Code = Trained_In.Treatment AND Physician.EmployeeID = Trained_In.Physician AND Physician.EmployeeID = Affiliated_With.Physician AND Affiliated_With.Department = Department.DepartmentID AND Department.Name = 'Cardiology';
+
+-- 3
+SELECT DISTINCT Nurse.Name AS "Nurse Name"
+FROM Nurse, On_Call, Room
+WHERE Room.Number = 123 AND Room.BlockFloor = On_Call.BlockFloor AND Room.BlockCode = On_Call.BlockCode AND Nurse.EmployeeID = On_Call.Nurse;
+
+-- 4
+SELECT DISTINCT Patient.Name AS "Patient Name", Patient.Address AS "Patient Address"
+FROM Patient, Prescribes, Medication
+WHERE Medication.Name = 'remdesivir' AND Medication.Code = Prescribes.Medication AND Patient.SSN = Prescribes.Patient;
+
+-- 5
+SELECT DISTINCT Patient.Name AS "Patient Name", Patient.InsuranceID AS "Insurance ID"
+FROM Patient, Stay, Room
+WHERE Room.Type = 'ICU' AND Room.Number = Stay.Room AND Patient.SSN = Stay.Patient AND DATE_PART('day', Stay."End" - Stay.Start) > 15;
+
+-- 6
+SELECT DISTINCT Nurse.Name AS "Nurse Name"
+FROM Nurse, Undergoes, Procedure
+WHERE Procedure.Name = 'bypass surgery' AND Procedure.Code = Undergoes.Procedure AND Nurse.EmployeeID = Undergoes.AssistingNurse;
+
+-- 7
+SELECT DISTINCT Nurse.Name AS "Nurse Name", Nurse.Position AS "Nurse Position", Physician.Name AS "Physician Name"
+FROM Nurse, Undergoes, Procedure, Physician
+WHERE Procedure.Name = 'bypass surgery' AND Procedure.Code = Undergoes.Procedure AND Nurse.EmployeeID = Undergoes.AssistingNurse AND Physician.EmployeeID = Undergoes.Physician;
+
+-- 8
+SELECT DISTINCT Physician.Name AS "Physician Name"
+FROM Physician, Undergoes, Procedure
+WHERE Physician.EmployeeID = Undergoes.Physician AND Procedure.Code = Undergoes.Procedure AND Procedure.Code NOT IN (SELECT Trained_In.Treatment FROM Trained_In WHERE Trained_In.Physician = Physician.EmployeeID);
+
+-- 9
+SELECT DISTINCT Physician.Name AS "Physician Name"
+FROM Physician, Undergoes, Procedure, Trained_In
+WHERE Physician.EmployeeID = Undergoes.Physician AND Procedure.Code = Undergoes.Procedure AND Procedure.Code = Trained_In.Treatment AND Trained_In.Physician = Physician.EmployeeID AND Undergoes.Date > Trained_In.CertificationExpires;
+
+-- 10
+SELECT DISTINCT Physician.Name AS "Physician Name", Procedure.Name AS "Procedure Name", Undergoes.Date AS "Date of procedure", Patient.Name AS "Patient Name"
+FROM Physician, Undergoes, Procedure, Trained_In, Patient
+WHERE Physician.EmployeeID = Undergoes.Physician AND Procedure.Code = Undergoes.Procedure AND Procedure.Code = Trained_In.Treatment AND Trained_In.Physician = Physician.EmployeeID AND Undergoes.Date > Trained_In.CertificationExpires AND Patient.SSN = Undergoes.Patient;
+
+-- 11
+SELECT DISTINCT Patient.Name AS "Patient Name", Physician.Name AS "Physician Name"
+FROM Patient, Prescribes, Physician, Undergoes, Procedure, Appointment, Affiliated_with, Department
+WHERE Patient.SSN = Prescribes.Patient AND Prescribes.Physician = Physician.EmployeeID AND Patient.SSN = Undergoes.Patient AND Undergoes.Procedure = Procedure.Code AND Patient.SSN = Appointment.Patient AND Appointment.Physician = Affiliated_with.Physician AND Affiliated_with.Department = Department.DepartmentID AND Procedure.Cost > 5000 AND Department.Name = 'Cardiology' AND Physician.EmployeeID NOT IN (SELECT Head FROM Department)
+GROUP BY Patient.Name, Physician.Name
+HAVING COUNT(Appointment.AppointmentID) >= 2;
+
+-- 12
+SELECT DISTINCT Medication.Name AS "Medication Name", Medication.Brand AS "Medication Brand"
+FROM Patient, Prescribes, Medication
+WHERE Patient.SSN = Prescribes.Patient AND Medication.Code = Prescribes.Medication AND Medication.Code IN (SELECT Medication FROM Prescribes GROUP BY Medication HAVING COUNT(*) = (SELECT MAX(Count) FROM (SELECT COUNT(*) AS Count FROM Prescribes GROUP BY Medication) AS MaxCount));

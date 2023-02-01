@@ -1,0 +1,153 @@
+-- Create the tables
+
+CREATE TABLE IF NOT EXISTS Physician(
+    EmployeeID int NOT NULL,
+    Name varchar(255) NOT NULL,
+    Position varchar(255) NOT NULL,
+    SSN int NOT NULL,
+    PRIMARY KEY (EmployeeID)
+);
+
+CREATE TABLE IF NOT EXISTS Patient(
+    SSN int NOT NULL,
+    Name varchar(255) NOT NULL,
+    Address varchar(255) NOT NULL,
+    Phone varchar(255) NOT NULL,
+    InsuranceID int NOT NULL,
+    PCP int NOT NULL,
+    PRIMARY KEY (SSN),
+    FOREIGN KEY (PCP) REFERENCES Physician(EmployeeID)
+);
+
+CREATE TABLE IF NOT EXISTS Department(
+    DepartmentID int NOT NULL,
+    Name varchar(255) NOT NULL,
+    Head int NOT NULL,
+    PRIMARY KEY (DepartmentID),
+    FOREIGN KEY (Head) REFERENCES Physician(EmployeeID)
+);
+
+CREATE TABLE IF NOT EXISTS Affiliated_with(
+    Physician int NOT NULL,
+    Department int NOT NULL,
+    PrimaryAffiliation bool NOT NULL,
+    PRIMARY KEY (Physician, Department),
+    FOREIGN KEY (Physician) REFERENCES Physician(EmployeeID),
+    FOREIGN KEY (Department) REFERENCES Department(DepartmentID)
+);
+
+CREATE TABLE IF NOT EXISTS Procedure(
+    Code int NOT NULL,
+    Name varchar(255) NOT NULL,
+    Cost int NOT NULL,
+    PRIMARY KEY (Code)
+);
+
+CREATE TABLE IF NOT EXISTS Trained_In(
+    Physician int NOT NULL,
+    Treatment int NOT NULL,
+    CertificationDate timestamp NOT NULL,
+    CertificationExpires timestamp NOT NULL,
+    PRIMARY KEY (Physician, Treatment),
+    FOREIGN KEY (Physician) REFERENCES Physician(EmployeeID),
+    FOREIGN KEY (Treatment) REFERENCES Procedure(Code)
+);
+
+
+CREATE TABLE IF NOT EXISTS Nurse(
+    EmployeeID int NOT NULL,
+    Name varchar(255) NOT NULL,
+    Position varchar(255) NOT NULL,
+    Registered bool NOT NULL,
+    SSN int NOT NULL,
+    PRIMARY KEY (EmployeeID)
+);
+
+CREATE TABLE IF NOT EXISTS Medication(
+    Code int NOT NULL,
+    Name varchar(255) NOT NULL,
+    Brand varchar(255) NOT NULL,
+    Description varchar(255) NOT NULL,
+    PRIMARY KEY (Code)
+);
+
+CREATE TABLE IF NOT EXISTS Block(
+    Floor int NOT NULL,
+    Code int NOT NULL,
+    PRIMARY KEY (Floor, Code)
+);
+
+CREATE TABLE IF NOT EXISTS Room(
+    Number int NOT NULL,
+    Type varchar(255) NOT NULL,
+    BlockFloor int NOT NULL,
+    BlockCode int NOT NULL,
+    Unavailable bool NOT NULL,
+    PRIMARY KEY (Number),
+    FOREIGN KEY (BlockFloor, BlockCode) REFERENCES Block(Floor, Code)
+);
+
+CREATE TABLE IF NOT EXISTS Appointment(
+    AppointmentID int NOT NULL,
+    Patient int NOT NULL,
+    PrepNurse int,
+    Physician int NOT NULL,
+    Start timestamp NOT NULL,
+    "End" timestamp NOT NULL,
+    ExaminationRoom varchar(255) NOT NULL,
+    PRIMARY KEY (AppointmentID),
+    FOREIGN KEY (Patient) REFERENCES Patient(SSN),
+    FOREIGN KEY (PrepNurse) REFERENCES Nurse(EmployeeID),
+    FOREIGN KEY (Physician) REFERENCES Physician(EmployeeID)
+);
+
+CREATE TABLE IF NOT EXISTS Prescribes(
+    Physician int NOT NULL,
+    Patient int NOT NULL,
+    Medication int NOT NULL,
+    Date timestamp NOT NULL,
+    Appointment int,
+    Dose varchar(255) NOT NULL,
+    PRIMARY KEY (Physician, Patient, Medication, Date),
+    FOREIGN KEY (Physician) REFERENCES Physician(EmployeeID),
+    FOREIGN KEY (Patient) REFERENCES Patient(SSN),
+    FOREIGN KEY (Medication) REFERENCES Medication(Code),
+    FOREIGN KEY (Appointment) REFERENCES Appointment(AppointmentID)
+);
+
+CREATE TABLE IF NOT EXISTS On_Call(
+    Nurse int NOT NULL,
+    BlockFloor int NOT NULL,
+    BlockCode int NOT NULL,
+    Start timestamp NOT NULL,
+    "End" timestamp NOT NULL,
+    PRIMARY KEY (Nurse, BlockFloor, BlockCode, Start, "End"),
+    FOREIGN KEY (Nurse) REFERENCES Nurse(EmployeeID),
+    FOREIGN KEY (BlockFloor, BlockCode) REFERENCES Block(Floor, Code)
+);
+
+CREATE TABLE IF NOT EXISTS Stay(
+    StayID int NOT NULL,
+    Patient int NOT NULL,
+    Room int NOT NULL,
+    Start timestamp NOT NULL,
+    "End" timestamp NOT NULL,
+    PRIMARY KEY (StayID),
+    FOREIGN KEY (Patient) REFERENCES Patient(SSN),
+    FOREIGN KEY (Room) REFERENCES Room(Number)
+);
+
+CREATE TABLE IF NOT EXISTS Undergoes(
+    Patient int NOT NULL,
+    Procedure int NOT NULL,
+    Stay int NOT NULL,
+    Date timestamp NOT NULL,
+    Physician int NOT NULL,
+    AssistingNurse int,
+    PRIMARY KEY (Patient, Procedure, Stay, Date),
+    FOREIGN KEY (Patient) REFERENCES Patient(SSN),
+    FOREIGN KEY (Procedure) REFERENCES Procedure(Code),
+    FOREIGN KEY (Stay) REFERENCES Stay(StayID),
+    FOREIGN KEY (Physician) REFERENCES Physician(EmployeeID),
+    FOREIGN KEY (AssistingNurse) REFERENCES Nurse(EmployeeID)
+);
