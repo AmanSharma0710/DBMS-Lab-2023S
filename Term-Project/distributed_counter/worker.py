@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from typing import Any
 
 from base import Worker
@@ -12,9 +13,9 @@ class WcWorker(Worker):
     while True:
       file = rds.get_file(self.name)
       if file is None:
-        if(len(rds.rds.xpending(IN, Worker.GROUP)) != 0):
-          os.wait(100)
-          continue
+        #if(len(rds.rds.xpending(IN, Worker.GROUP)) != 0):
+          #time.sleep(1)
+          #continue
         break
       filename = file[0][1][0][1][FNAME]
       logging.info(f"Processing {filename}")

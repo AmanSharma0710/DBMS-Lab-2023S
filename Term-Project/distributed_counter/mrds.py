@@ -22,9 +22,9 @@ class MyRedis:
     stream_reply = self.rds.xreadgroup(Worker.GROUP, name, {IN: ">"}, 1)
     if(len(stream_reply) != 0):
       return stream_reply
-    stream_reply = self.rds.xautoclaim(IN, Worker.GROUP, name, 1000)
-    if(len(stream_reply) != 0):
-      return stream_reply
+    #stream_reply = self.rds.xautoclaim(IN, Worker.GROUP, name, 1000)
+    #if(len(stream_reply) != 0):
+      #return stream_reply
     return None
 
   def top(self, n: int) -> list[tuple[bytes, float]]:
